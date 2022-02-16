@@ -1,0 +1,177 @@
+{
+
+    "resources": {
+        "mysql": {
+            "mysql_host_ip": "10.10.10.111",
+            "mysql_host_username": "root",
+            "mysql_host_password": "appropolis2019"
+        },
+
+        "redis": {
+            "redis_host_ip": "10.10.10.111"
+        },
+
+        "hdfs": {
+            "hdfs_host_ip": "10.10.10.111"
+        },
+
+        "mq": {
+            "mq_host_ip": "10.10.10.111",
+            "mq_host_username": "guest",
+            "mq_host_password": "guest"
+        }
+    },
+
+    "services": {
+        "InputDataHandler": {
+            "logging" : {
+                "level": "DEBUG",
+                "path": "/tmp/logs/"
+            },
+            "routing_key": "cnaf-sagw.stream.#",
+            "stream_processor_ip_port": "localhost:5000"
+
+        },
+        "StreamProcessor": {
+            "logging" : {
+                "level": "DEBUG",
+                "path": "/tmp/logs/"
+            },
+            "port": 5000,
+            "ray_redis_address": "10.10.10.111:16379",
+            "ray_cpus": 2,
+            "ray_memory": 100000000
+        },
+        "TrainingActivator": {
+            "logging" : {
+                "level": "DEBUG",
+                "path": "/tmp/logs/"
+            },
+            "web_api_port": 5001,
+            "model_trainer_ip_port": "localhost:5002"
+        },
+        "ModelTrainer": {
+            "logging" : {
+                "level": "DEBUG",
+                "path": "/tmp/logs/"
+            },
+            "host_ip": "localhost",
+            "web_api_port": 5002,
+            "ray_cpus": 4,
+            "ray_memory": 100000000
+        },
+        "DataRetriever": {
+            "logging" : {
+                "level": "DEBUG",
+                "path": "/tmp/logs/"
+            },
+            "web_api_port": 5003
+        }
+    },
+
+    "streams": {
+        "store": {
+            "stream_id": 0,
+            "stream": "store",
+            "type_ids": [1, 2, 3, 4],
+            "description": "multi-step prediction",
+            "headers": ["create_date", "store_id", "sales"],
+            "pipelines": [
+                {
+                    "pipeline_name": "CNAF1",
+                    "training_activation" : {
+                        "day": [],
+                        "weekday": [
+                            0,1,2,3,4,5,6
+                        ],
+                        "time": "16:38:00"
+                    },
+                    "n_features": 1,
+                    "n_steps": 24,
+                    "p_steps": 15,
+                    "epocs": 20,
+                    "training_data_period": {
+                        "years": 0,
+                        "months": 1,
+                        "days": 0,
+                        "hours": 0
+                    },
+                    "cache_fields": ["create_date", "sales", "x"],
+                    "time_stamp_column": "create_date",
+                    "prediction_column": "sales",
+                    "result_headers": ["create_date"],
+                    "model_meta_headers": ["min", "max", "scale", "training_start_time", "training_end_time", "rmse"],
+                    "training_result_headers": ["create_date", "y", "yhat", "ydiff"]
+                }
+            ]
+        },
+
+        "meter": {
+            "stream_id": 1,
+            "stream": "meter",
+            "type_ids": [19, 32, 52, 66, 73],
+            "description": "single-point anomaly detection",
+            "headers": ["meter_data_id", "meter_id", "create_date", "ap", "ep", "pv_a", "pv_b", "pv_c",
+                "pc_a", "pc_b", "pc_c", "uab", "ubc", "uca", "pf", "rp", "ta", "tb", "tc",
+                "stage_type", "price", "hd", "hr", "in", "modifier", "modify_date", "data_sources"],
+            "pipelines": [
+                {
+                    "pipeline_name": "SAGW1",
+                    "training_activation" : {
+                        "day": [],
+                        "weekday": [
+                            0,1,2,3,4,5,6
+                        ],
+                        "time": "15:30:00"
+                    },
+                    "training_interval": 5,
+                    "n_features": 1,
+                    "n_steps": 24,
+                    "epocs": 20,
+                    "smooth_window_size": 3,
+                    "cache_fields": ["create_date", "ep", "x", "xhat"],
+                    "training_data_period": {
+                        "years": 0,
+                        "months": 2,
+                        "days": 0,
+                        "hours": 0
+                    },
+                    "time_stamp_column": "create_date",
+                    "prediction_column": "ep",
+                    "result_headers": ["create_date", "ep", "x", "xhat", "threshold", "label"],
+                    "model_meta_headers": ["min", "max", "scale", "rmse", "training_start_time", "training_end_time"],
+                    "training_result_headers": ["create_date", "y", "yhat", "ydiff"],
+                    "training_start_time": "2019-09-01 00:00:00",
+                    "training_end_time": "2019-10-31 00:00:00"
+                },
+                {
+                    "pipeline_name": "SAGW2",
+                    "training_activation" : {
+                        "day": [],
+                        "weekday": [
+                            0,1,2,3,4,5,6
+                        ],
+                        "time": "15:30:00"
+                    },
+                    "n_features": 4,
+                    "n_steps": 24,
+                    "epocs": 20,
+                    "smooth_window_size": 3,
+                    "training_data_period": {
+                        "years": 0,
+                        "months": 2,
+                        "days": 0,
+                        "hours": 0
+                    },
+                    "time_stamp_column": "create_date",
+                    "prediction_column": "ep",
+                    "cache_fields": ["create_date", "ep", "y", "yhat", "label_hat"],
+                    "result_headers": ["create_date", "ep", "yhat", "threshold", "label"],
+                    "model_meta_headers": ["min", "max", "scale", "rmse", "training_start_time", "training_end_time"],
+                    "training_result_headers": ["create_date", "y", "yhat", "ydiff"]
+                }
+            ]
+        }
+    }
+
+}

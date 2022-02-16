@@ -1,0 +1,138 @@
+{
+
+    "resources": {
+        "mysql": {
+            "mysql_host_ip": "10.10.10.111",
+            "mysql_host_username": "root",
+            "mysql_host_password": "appropolis2019"
+        },
+
+        "redis": {
+            "redis_host_ip": "10.10.10.111"
+        },
+
+        "hdfs": {
+            "hdfs_host_ip": "10.10.10.184"
+        },
+
+        "mq": {
+            "mq_host_ip": "10.10.10.111",
+            "mq_host_username": "guest",
+            "mq_host_password": "guest"
+        },
+
+        "logging" : {
+            "level": "DEBUG",
+            "path": "/tmp/logs/",
+            "modules": [
+                "InputDataHandler",
+                "StreamProcessor",
+                "TrainingActivator",
+                "ModelTrainer",
+                "DataRetriever",
+                "Simulators"
+            ]
+        }
+    },
+
+    "services": {
+        "input_data_handler": {
+            "routing_key": "cnaf-sagw.stream.#",
+            "stream_processor_ip_port": "localhost:5000"
+        },
+        "stream_processor": {
+            "port": 5000,
+            "ray_redis_address": "10.10.10.111:16379",
+            "ray_cpus": 2,
+            "ray_memory": 100000000
+        },
+        "training_activator": {
+            "web_api_port": 5001,
+            "model_trainer_ip_port": "localhost:5002"
+        },
+        "model_trainer": {
+            "web_api_port": 5002,
+            "ray_cpus": 4,
+            "ray_memory": 100000000
+        },
+        "data_retriever": {
+
+        }
+    },
+
+    "streams": {
+        "store": {
+            "stream_id": 0,
+            "stream": "store",
+            "type_ids": [0, 1, 2, 3],
+            "description": "multi-step prediction",
+            "headers": ["create_date", "store", "sales"],
+            "pipelines": [
+                {
+                    "pipeline": "CNAF1",
+                    "training_activation" : {
+                        "day": [15],
+                        "weekday": [],
+                        "time": "15:30:00"
+                    },
+                    "n_features": 1,
+                    "n_steps": 24,
+                    "p_steps": 15,
+                    "epocs": 20,
+                    "cache_fields": ["create_date", "sales"],
+                    "result_headers": ["a", "b", "c"],
+                    "model_meta_headers": ["min", "max"],
+                    "training_result_headers": ["a", "b", "c"]
+                }
+            ]
+        },
+
+        "meter": {
+            "stream_id": 1,
+            "stream": "meter",
+            "type_ids": [19, 32, 52, 66, 73],
+            "description": "single-point anomaly detection",
+            "headers": ["meter_data_id", "meter_id", "create_date", "ap", "ep", "pv_a", "pv_b", "pv_c",
+                "pc_a", "pc_b", "pc_c", "uab", "ubc", "uca", "pf", "rp", "ta", "tb", "tc",
+                "stage_type", "price", "hd", "hr", "in", "modifier", "modify_date", "data_sources"],
+            "pipelines": [
+                {
+                    "pipeline": "SAGW1",
+                    "training_activation" : {
+                        "day": [],
+                        "weekday": [
+                            1,3
+                        ],
+                        "time": "15:30:00"
+                    },
+                    "training_interval": 5,
+                    "n_features": 1,
+                    "n_steps": 24,
+                    "epocs": 20,
+                    "cache_fields": ["create_date", "ep_diff", "ep"],
+                    "result_headers": ["a", "b", "c"],
+                    "model_meta_headers": ["min", "max"],
+                    "training_result_headers": ["a", "b", "c"]
+                },
+                {
+                    "pipeline": "SAGW2",
+                    "training_activation" : {
+                        "day": [],
+                        "weekday": [
+                            0,1,2,3,4,5,6
+                        ],
+                        "time": "15:30:00"
+                    },
+                    "n_features": 1,
+                    "n_steps": 24,
+                    "epocs": 20,
+                    "cache_fields": ["create_date", "ep_diff", "ep"],
+                    "result_headers": ["a", "b", "c"],
+                    "model_meta_headers": ["min", "max"],
+                    "training_result_headers": ["a", "b", "c"]
+                }
+            ]
+        }
+    }
+
+}

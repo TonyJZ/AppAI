@@ -1,0 +1,11 @@
+{
+    "lvl1-obj": {
+        "lvl2-obj": {
+            "lvl3-obj": {
+                "key1": "value1",
+                "key2": "value2"
+            }
+        },
+        "lvl2-arr": [ "arr-item1", "arr-item2", "arr-item3" ]
+    }
+}

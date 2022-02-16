@@ -1,0 +1,38 @@
+exploration/*/meters/
+exploration/*/raw/
+exploration/*/models/
+exploration/*/results/
+exploration/*/reports/
+exploration/*/processed/
+reports/
+data/
+upload/
+
+.vscode
+.idea
+*.pyc
+*.pyx
+*.orig
+
+# ignore benchmark folder in exploration
+exploration/*/benchmark/
+
+# ignore any csv file
+# *.csv
+
+# ignore pdf file in exploration
+exploration/*/*.pdf
+
+# ignore venv
+venv/
+venv-3-6-7/
+venv-3-6-8/
+
+# Plots
+*.pdf
+
+# Test Scripts
+*.sh
+
+# Logs
+logs/
